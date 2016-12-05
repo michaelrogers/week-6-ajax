@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 	let suggestedTopics = ['Lions', 'Tigers', 'Bears', 'Oh myyy'];
 	const queryLimit = 9;
-	const featuredQuery = "http://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC";
-	const searchQuery = 'http://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC';
+	const featuredQuery = "https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC";
+	const searchQuery = 'https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC';
 	let prefetchArray = []; //Array to prefetch the gifs in so there is no delay on mouseover swap
 	
 	const generateImageElements = (response) => {
