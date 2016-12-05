@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-	let suggestedTopics = ['Lions', 'Tigers', 'Bears'];
+	let suggestedTopics = ['Lions', 'Tigers', 'Bears', 'Oh myyy'];
 	const queryLimit = 9;
 	const featuredQuery = "http://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC";
 	const searchQuery = 'http://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC';
 	let prefetchArray = []; //Array to prefetch the gifs in so there is no delay on mouseover swap
-	//Generate the images to be displayed in the 
+	
 	const generateImageElements = (response) => {
-		console.log(response);
+		let gifContainer = document.getElementById('gifContainer');
 		let fragment = document.createDocumentFragment();
 		//add data attributes for static and animated files
 		response.map((x) => {
@@ -16,12 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				x.rating
 			));
 		});
-		document.getElementById('gifContainer').innerHTML = "";
-		document.getElementById('gifContainer').appendChild(fragment);
-		// console.log(fragment)
-
+		gifContainer.innerHTML = "";
+		gifContainer.appendChild(fragment);
 	}
-	//Parse topics from the topics array and generate 
+
 	const createImageElement = (staticURL, animatedURL, rating) => {
 		//Create the individual image block
 		let eachDiv = document.createElement('div');
@@ -41,43 +39,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const handleResponse = (response) => {
 		generateImageElements(response);
-	    	// console.log(response)
     	let gifArray = Array.from(document.querySelectorAll('#gifContainer > div > img'));
-    	if (gifArray) {    		
-    		gifArray.map((gif) => {
-    			let prefetchImage = new Image;
-	    		prefetchImage.src = gif.dataset.animated;
-	    		prefetchArray.push(prefetchImage)
+    	if (!gifArray) return false;  		
+		gifArray.map((gif) => {
+			let prefetchImage = new Image;
+    		prefetchImage.src = gif.dataset.animated;
+    		prefetchArray.push(prefetchImage);
 
-	    		gif.addEventListener('mouseleave', (event) => {
-	    			event.currentTarget.src = event.currentTarget.dataset.static;
-	    		});
-	    		gif.addEventListener('mouseover', (event) => {
-	    			event.currentTarget.src = event.currentTarget.dataset.animated;
-	    		});
-			}); //map
-    	}
+    		gif.addEventListener('mouseleave', (event) => {
+    			event.currentTarget.src = event.currentTarget.dataset.static;
+    		});
+    		gif.addEventListener('mouseover', (event) => {
+    			event.currentTarget.src = event.currentTarget.dataset.animated;
+    		});
+		}); //map
+    }
+
+	const createSearchItem = (value, recentSearches = true, active = false) => {
+		let elementSelector = (recentSearches) ? 'recentSearches' : 'trendingTopics';
+		let parent = document.getElementById(elementSelector);
+		let element = document.createElement('a');
+		element.className = active ? 'list-group-item active' :'list-group-item';
+		element.dataset.search = value;
+		element.innerHTML = value;
+		element.href = '#';
+		element.addEventListener('click', buttonEvent)
+		parent.insertBefore(element, parent.firstChild);
 	}
 
-	document.getElementById('searchButton').addEventListener('click', (event) => {
-		const inputFieldValue = document.getElementById('inputField').value.trim();
-		if (inputFieldValue !== "") {
-			
-			console.log(inputFieldValue);
-			$.ajax({url: `${searchQuery}&q=${inputFieldValue}&limit=${queryLimit}`, method: 'GET'})
-			.done((response) => handleResponse(response.data)); 
-		}
-		return false;
-	});
+	const buttonEvent = (event) => {
+		query(event.currentTarget.dataset.search, queryLimit);
+		clearActiveState();
+		event.currentTarget.classList.add('active');
+	}
+
+	const clearActiveState = () => {
+		Array.from(document.querySelectorAll('.list-group-item'))
+			.map((x) => x.classList.remove('active'));
+	}
+
+	const query = (inputFieldValue, limit, search = true) => {
+		$.ajax({
+			url: `${search ? searchQuery : featuredQuery}&q=${inputFieldValue}&limit=${limit}`,
+			method: 'GET'})
+			.done((response) => handleResponse(response.data));
+	}	
 
 	const init = () => {
-		$.ajax({url: `${featuredQuery}&limit=${queryLimit}`, method: 'GET'})
-			.done((response) => handleResponse(response.data)); 
+		//Search button click listener
+		document.getElementById('searchButton').addEventListener('click', (event) => {
+			const inputFieldValue = document.getElementById('inputField').value.trim();
+			if (inputFieldValue !== "") {
+				clearActiveState();
+				createSearchItem(inputFieldValue, true, true);
+				query(inputFieldValue, queryLimit);
+			}
+			document.getElementById('inputField').value = '';
+			return false;
+		});
+		//More gifs click listener
+		document.getElementById('buttonMore').addEventListener('click', (event) => {
+			const activeSearch = document.querySelector('a.active');
+			const currentLength = document.getElementById('gifContainer').childElementCount;
+			//If there is an active search, a search query is called with its value;
+			//otherwise a featured gif query is called.
+			query(activeSearch ? activeSearch.dataset.search : null,
+				currentLength + queryLimit,
+				activeSearch ? true : false
+			);
+		})
+		suggestedTopics.reverse().forEach((topic) => createSearchItem(topic, false));
+		//Initial featured gifs
+		query(null, queryLimit, false);
 	}
 
 	init();
-
-
-
 
 });

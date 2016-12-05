@@ -13,9 +13,10 @@ footer {
   transition: 1s;
 }
 
-img {
-  /*filter: grayscale(0.4);*/
+#gifContainer > div {
+  min-height: 180px;
 }
+
 @media (min-width: 700px) {
   #gifContainer div img {
     max-height: 149.7px;
